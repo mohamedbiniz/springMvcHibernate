@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans
+        xmlns="http://www.springframework.org/schema/beans"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xmlns:context="http://www.springframework.org/schema/context"
+        xmlns:tx="http://www.springframework.org/schema/tx"
+        xmlns:mvc="http://www.springframework.org/schema/mvc"
+        xsi:schemaLocation="
+  http://www.springframework.org/schema/beans
+  http://www.springframework.org/schema/beans/spring-beans.xsd
+  http://www.springframework.org/schema/context
+  http://www.springframework.org/schema/context/spring-context.xsd
+  http://www.springframework.org/schema/mvc
+  http://www.springframework.org/schema/mvc/spring-mvc.xsd
+  http://www.springframework.org/schema/tx
+  http://www.springframework.org/schema/tx/spring-tx.xsd">
+    <!-- Add support for component scanning -->
+    <context:component-scan base-package="com.spring.mvc" />
+    <!-- Add support for conversion, formatting and validation support -->
+    <mvc:annotation-driven/>
+    <!-- Define Spring MVC view resolver -->
+    <bean class="org.springframework.web.servlet.view.InternalResourceViewResolver">
+        <property name="prefix" value="/WEB-INF/views/" />
+        <property name="suffix" value=".jsp" />
+    </bean>
+
+    <!-- Read properties from file !-->
+
+    <context:property-placeholder location="classpath:database.properties"/>
+
+    <!-- Step 1: Define Database DataSource / connection pool -->
+    <bean id="dataSource" class="org.apache.commons.dbcp.BasicDataSource"
+                destroy-method="close">
+        <property name="driverClassName" value="${jdbc.driverClassName }" />
+        <property name="url" value="${jdbc.url }" />
+        <property name="username" value="${jdbc.username}" />
+        <property name="password" value="${jdbc.password }" />
+
+    </bean>
+
+    <!-- Step 2: Setup Hibernate session factory -->
+    <bean id="sessionFactory"
+          class="org.springframework.orm.hibernate5.LocalSessionFactoryBean">
+        <property name="dataSource" ref="dataSource" />
+        <property name="packagesToScan" value="com.spring.mvc.entities" />
+        <property name="hibernateProperties">
+            <props>
+                <prop key="hibernate.dialect" >${hibernate.dialect}</prop>
+                <prop key="hibernate.show_sql">${hibernate.show_sql}</prop>
+                <prop key="hibernate.hbm2ddl.auto">${hibernate.hbm2ddl.auto}</prop>
+                <prop key="hibernate.format_sql">${hibernate.format_sql}</prop>
+
+            </props>
+        </property>
+    </bean>
+    <!-- Step 3: Setup Hibernate transaction manager -->
+    <bean id="myTransactionManager"
+          class="org.springframework.orm.hibernate5.HibernateTransactionManager">
+        <property name="sessionFactory" ref="sessionFactory"/>
+    </bean>
+    <!-- Step 4: Enable configuration of transactional behavior based on annotations -->
+    <tx:annotation-driven transaction-manager="myTransactionManager" />
+    <!-- Add support for reading web resources: css, images, js, etc ... -->
+    <mvc:resources location="/resources/" mapping="/resources/**"></mvc:resources>
+
+</beans>
+
